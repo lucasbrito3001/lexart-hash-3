@@ -5,25 +5,32 @@ const Product = {
     getProducts: async (weight, code) => {
         const { data } = await request.get(URL_DATOS)
 
-        const maxWeight = weight + (weight * 0.05)
-        const minWeight = weight - (weight * 0.05)
+        const response = Product.filterProducts(data, weight, code)
 
-        const response = Product.filterProducts(data, maxWeight, minWeight, code)
-
-        return response
+        return { ...response, status: 200 }
     },
-    filterProducts: (productList, maxWeight, minWeight, code) => {
-        let precioTotal = 0;
-        let listToReturn = []
-
+    filterProducts: (productList, weight, code) => {
+        let precioTotal = 0
+        let productos = []
+        let maxWeight = 0
+        let minWeight = 0
+        
         productList.forEach(product => {
-            if(product.code === code && product.wigth >= minWeight && product.wigth <= maxWeight) {
-                listToReturn.push({ nombre: product.name, precio: `${product.moneda}${product.price}` })
+            maxWeight = parseInt(product.wigth) + (parseInt(product.wigth) * 0.05)
+            minWeight = parseInt(product.wigth) - (parseInt(product.wigth) * 0.05)
+
+            console.log(maxWeight, minWeight)
+
+            if(product.code === code && weight >= minWeight && weight <= maxWeight) {
+                productos.push({ nombre: product.name, precio: product.price })
+                
                 precioTotal += product.price
             }
         })
+        
+        const moneda = productos.length > 0 ? productList[0].moneda : ''
 
-        return { precioTotal, listToReturn }
+        return { moneda, precioTotal, productos }
     },
 
 }

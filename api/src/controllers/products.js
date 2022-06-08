@@ -6,9 +6,13 @@ const Product = {
 
         if(code.charAt(0) !== '#') code = `#${code}`
 
+        if(!weight || !code) res.send({ status: 200, message: "El codigo y peso son requeridos" })
+
         const response = await ProductsModel.getProducts(parseInt(weight), code)
 
-        res.json(response)
+        if(response.productos.length === 0) response.message = "No se encontraron productos para esta búsqueda"
+
+        res.send(response)
     }
 }
 
