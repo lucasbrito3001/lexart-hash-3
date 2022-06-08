@@ -34,6 +34,12 @@
                                 <td>{{ product.precio }}</td>
                             </tr>
                         </template>
+                        <tr v-else-if="loadingProducts">
+                            <td colspan="2">
+                                <div class="spinner text-center"></div>
+                                <span>Buscando productos...</span>
+                            </td>
+                        </tr>
                         <tr v-else>
                             <td colspan="2">Sin productos, haz una nueva búsqueda</td>
                         </tr>
@@ -60,17 +66,20 @@ export default {
             weight: null,
         },
         products: [],
-        totalPrice: 0
+        totalPrice: 0,
+        loadingProducts: false
     }),
     methods: {
         searchProducts: async function () {
             this.products = []
             this.totalPrice = 0
+            this.loadingProducts = true
 
             const res = await api.getProducts(this.catalog.code, this.catalog.weight)
             if(res.status === 200) {
                 this.products = res.productos
                 this.totalPrice = res.precioTotal
+                this.loadingProducts = false
             }
         },
     },
@@ -182,6 +191,24 @@ table tfoot tr td {
 
     .btn {
         width: 100%;
+    }
+}
+
+.spinner {
+    width: 35px;
+    height: 35px;
+    border: 5px solid #f3f3f3;
+    border-top: 5px solid var(--dark-color);
+    border-radius: 100px;
+    animation: spin 1s linear infinite;
+    margin: 0 auto 10px auto;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0);
+    } to {
+        transform: rotate(360deg);
     }
 }
 </style>
