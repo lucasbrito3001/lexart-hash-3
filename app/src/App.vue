@@ -15,7 +15,7 @@
                     v-model="catalog.weight"
                     class="inputs-styles input-weight"
                 />
-                <button @click="searchProducts" class="inputs-styles btn">
+                <button @click="searchProducts" :class="`inputs-styles btn ${isButtonDisabled ? 'btn-disabled' : ''}`" :disabled="isButtonDisabled || !searchProducts">
                     Buscar
                 </button>
             </div>
@@ -31,7 +31,7 @@
                         <template v-if="products.length > 0">
                             <tr v-for="(product, idx) in products" :key="idx">
                                 <td>{{ product.nombre }}</td>
-                                <td>{{ product.precio }}</td>
+                                <td> {{ moneda }} {{ product.precio }}</td>
                             </tr>
                         </template>
                         <tr v-else-if="loadingProducts">
@@ -41,13 +41,13 @@
                             </td>
                         </tr>
                         <tr v-else>
-                            <td colspan="2">Sin productos, haz una nueva búsqueda</td>
+                            <td colspan="2"> {{ emptyTable }} </td>
                         </tr>
                     </tbody>
                     <tfoot v-if="products.length > 0">
                         <tr>
                             <td>Total</td>
-                            <td>{{ totalPrice }}</td>
+                            <td>{{ moneda }} {{ totalPrice }}</td>
                         </tr>
                     </tfoot>
                 </table>
@@ -67,8 +67,20 @@ export default {
         },
         products: [],
         totalPrice: 0,
-        loadingProducts: false
+        moneda: '',
+        loadingProducts: false,
+        emptyTable: 'Ingrese el codigo y peso para buscar productos'
     }),
+    computed: {
+        isButtonDisabled() {
+            return !this.catalog.code || !this.catalog.weight
+        }
+    },
+    filters: {
+        formatMoney(value) {
+            return value.toLocaleString('en-US', { style: 'currency', currency: "UYU" })
+        }
+    },
     methods: {
         searchProducts: async function () {
             this.products = []
@@ -78,8 +90,13 @@ export default {
             const res = await api.getProducts(this.catalog.code, this.catalog.weight)
             if(res.status === 200) {
                 this.products = res.productos
+
                 this.totalPrice = res.precioTotal
+                this.moneda = res.moneda
+
                 this.loadingProducts = false
+
+                if(res.productos.length === 0 && res.message) this.emptyTable = res.message
             }
         },
     },
@@ -139,10 +156,15 @@ export default {
     transition: .3s;
 }
 
-.btn:hover {
+.btn-disabled {
+    background-color: gray;
+    border: gray;
+}
+
+/* .btn:hover {
     background: white;
     color: var(--primary-color);
-}
+} */
 
 table {
     margin-top: 5vh;
@@ -182,7 +204,7 @@ table tfoot tr td {
 
 @media screen and (max-width: 992px) {
     .div-inputs {
-        flex-direction: column;
+        flex-direction: row;
     }
 
     .inputs-styles {
